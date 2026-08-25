@@ -1,0 +1,74 @@
+1. What is the Node.js Event Loop?
+
+*The Event Loop is the core mechanism in Node.js that enables non-blocking, asynchronous I/O operations despite JavaScript running on a single thread.
+
+*It continuously monitors the Call Stack and the Callback Queue (Event Queue). When the Call Stack becomes completely empty, the Event Loop takes pending callbacks from the queue and pushes them onto the Call Stack to be executed.
+////////////////////
+
+2. What is Libuv and What Role Does It Play in Node.js?
+
+Libuv is a multi-platform, open-source C library specifically designed for Node.js to handle asynchronous I/O.
+
+Its Role:
+
+It provides and manages the Event Loop.
+
+It provides the Worker Thread Pool (for handling heavy, blocking tasks like file system access and cryptography).
+
+It interfaces directly with the underlying operating system kernel (using epoll, kqueue, IOCP) for network and timer events.
+////////////////////////////////////
+3. How Does Node.js Handle Asynchronous Operations Under the Hood?
+
+Node.js delegates asynchronous operations to Libuv and the underlying OS kernel:
+
+Network I/O & Timers: Handled natively by the OS kernel (non-blocking system APIs).
+
+File System (fs) & Cryptography (crypto): Offloaded to the Libuv Worker Thread Pool because most OS file APIs are blocking.
+
+Once the background operation completes, Libuv places the corresponding callback function into the Event Queue, and the Event Loop pushes it to the Call Stack for execution when the stack is free.
+///////////////////////////////////////////
+4. What is the Difference Between the Call Stack, Event Queue, and Event Loop in Node.js?
+
+Call Stack:
+
+A LIFO (Last-In, First-Out) data structure that executes JavaScript code line by line. If a function is called, it is pushed to the top of the stack; when it finishes, it is popped off.
+
+Event Queue (Callback Queue / Task Queue):
+
+A FIFO (First-In, First-Out) data structure that holds callbacks from completed asynchronous tasks waiting to be executed.
+
+Event Loop:
+
+The coordinator/loop that constantly checks if the Call Stack is empty. If empty, it dequeues the oldest callback from the Event Queue and pushes it onto the Call Stack.
+
+//////////////////////////
+5. What is the Node.js Thread Pool and How to Set the Thread Pool Size?
+
+Thread Pool: A pool of background worker threads maintained by Libuv used to execute CPU-intensive or blocking operations (e.g., fs, crypto, zlib, dns.lookup) outside the main JavaScript thread.
+
+Default Size: It defaults to 4 threads.
+
+How to Set the Size: By setting the environment variable UV_THREADPOOL_SIZE before the process boots (up to a maximum of 128 threads):
+
+On Linux / macOS / Git Bash:
+UV_THREADPOOL_SIZE=8 node app.js
+
+On Windows (PowerShell):
+$env:UV_THREADPOOL_SIZE=8; node app.js
+Inside JavaScript code (must be written before importing any async modules):
+process.env.UV_THREADPOOL_SIZE = 8;
+
+////////////////////////////
+6. How Does Node.js Handle Blocking and Non-Blocking Code Execution?
+
+Blocking Code (Synchronous):
+
+Executes directly on the main JavaScript thread via the Call Stack (e.g., fs.readFileSync(), JSON.parse(), heavy while loops).
+
+It pauses and freezes the entire execution process until the current task finishes, preventing any other code or incoming HTTP requests from running.
+
+Non-Blocking Code (Asynchronous):
+
+Initiates the operation on the main thread and registers a callback/promise/async-await (e.g., fs.readFile(), database queries, network requests).
+
+Immediately offloads the work to the OS kernel or the Libuv Thread Pool and frees the Call Stack to continue executing the rest of the application. The callback is executed later via the Event Loop when the task finishes.
