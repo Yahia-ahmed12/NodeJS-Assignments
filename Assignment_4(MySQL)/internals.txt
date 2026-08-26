@@ -59,6 +59,7 @@ Inside JavaScript code (must be written before importing any async modules):
 process.env.UV_THREADPOOL_SIZE = 8;
 
 ////////////////////////////
+
 6. How Does Node.js Handle Blocking and Non-Blocking Code Execution?
 
 Blocking Code (Synchronous):
