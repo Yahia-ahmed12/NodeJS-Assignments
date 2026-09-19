@@ -1,0 +1,235 @@
+// --- Task 1: Create explicit collection 'books' with validation rule ---
+
+use ASSIGNMENT_7_DEV
+
+db.createCollection("books", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["title"],
+      properties: {
+        title: {
+          bsonType: "string",
+          minLength: 1,
+          description: "title must be a non-empty string"
+        }
+      }
+    }
+  }
+})
+
+
+// --- Task 2: Create implicit collection 'authors' by inserting a document ---
+
+use ASSIGNMENT_7_DEV
+
+db.authors.insertOne({
+  name: "Author1",
+  nationality: "British"
+})
+
+
+// --- Task 3: Create a capped collection "logs" with size limit 1MB ---
+
+use ASSIGNMENT_7_DEV
+
+db.createCollection("logs", {
+  capped: true,
+  size: 1048576
+})
+
+
+// --- Task 4: Create an index on the books collection for the title field ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.createIndex({ title: 1 })
+
+
+// --- Task 5: Insert one document into the books collection ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.insertOne({
+  title: "Book1",
+  author: "Ali",
+  year: 1937,
+  genres: ["Fantasy", "Adventure"]
+})
+
+
+// --- Task 6: Insert multiple documents into the books collection ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.insertMany([
+  {
+    title: "Future",
+    author: "George Orwell",
+    year: 2020,
+    genres: ["Science Fiction"]
+  },
+  {
+    title: "To Kill a Mockingbird",
+    author: "Harper Lee",
+    year: 1960,
+    genres: ["Classic", "Fiction"]
+  },
+  {
+    title: "Brave New World",
+    author: "Aldous Huxley",
+    year: 2006,
+    genres: ["Dystopian", "Science Fiction"]
+  }
+])
+
+
+// --- Task 7: Insert a new log into the logs collection ---
+
+use ASSIGNMENT_7_DEV
+
+db.logs.insertOne({
+  book_id: "64b5c2d8a123456ef8914",
+  action: "borrowed"
+})
+
+
+// --- Task 8: Update the book with title "Future" change the year to be 2022 ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.updateOne(
+  { title: "Future" },
+  { $set: { year: 2022 } }
+)
+
+
+// --- Task 9: Find a Book with title "Brave New World" ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.findOne({ title: "Brave New World" })
+
+
+// --- Task 10: Find all books published between 1990 and 2010 ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.find({
+  year: { $gte: 1990, $lte: 2010 }
+})
+
+
+// --- Task 11: Find books where the genre includes "Science Fiction" ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.find({ genres: "Science Fiction" })
+
+
+// --- Task 12: Skip the first two books, limit to three, sorted by year descending ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.find().sort({ year: -1 }).skip(2).limit(3)
+
+
+// --- Task 13: Find books where the year field is stored as an integer ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.find({ year: { $type: "int" } })
+
+
+// --- Task 14: Find all books where the genres field does not include "Horror" or "Science Fiction" ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.find({
+  genres: { $nin: ["Horror", "Science Fiction"] }
+})
+
+// --- Task 15: Delete all books published before 2000 ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.deleteMany({ year: { $lt: 2000 } })
+
+
+
+// --- Task 16: Using aggregation functions, filter books published after 2000 and sort by year descending ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.aggregate([
+  { $match: { year: { $gt: 2000 } } },
+  { $sort: { year: -1 } }
+])
+
+
+// --- Task 17: Find books published after 2000 showing only title, author, and year ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.aggregate([
+  { $match: { year: { $gt: 2000 } } },
+  { $project: { _id: 0, title: 1, author: 1, year: 1 } }
+])
+
+
+
+// --- Task 18: Break an array of genres into separate documents ---
+
+use ASSIGNMENT_7_DEV
+
+db.books.aggregate([
+  { $unwind: "$genres" },
+  { $project: { _id: 0, title: 1, genres: 1 } }
+])
+
+
+
+// --- Task 19: Join logs collection with books collection ---
+
+use ASSIGNMENT_7_DEV
+
+db.logs.aggregate([
+  {
+    $addFields: {
+      bookObjectId: { $toObjectId: "$book_id" }
+    }
+  },
+  {
+    $lookup: {
+      from: "books",
+      localField: "bookObjectId",
+      foreignField: "_id",
+      as: "book_details"
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      action: 1,
+      "book_details.title": 1,
+      "book_details.author": 1,
+      "book_details.year": 1
+    }
+  }
+])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
